@@ -1,0 +1,22 @@
+<button onclick="submit()">Submit</button>
+<button onclick="get()">Get</button>
+<script>
+function submit() {
+    fetch('/api/chime', {
+        method: 'PUT',
+        body: JSON.stringify({
+            resource: 'scratch/60917032',
+            event: 'view/index'
+        }),
+        headers: {
+            'content-type': 'application/json'
+        }
+    });
+}
+function get() {
+    fetch('/api/total?resource=60917032&event=view/index')
+        .then((res) => res.text())
+        .then((text) => alert(text));
+}
+
+</script>

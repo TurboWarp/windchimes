@@ -1,0 +1,26 @@
+{
+  "name": "@turbowarp/windchimes",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TurboWarp/windchimes.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TurboWarp/windchimes/issues"
+  },
+  "homepage": "https://github.com/TurboWarp/windchimes#readme",
+  "description": "",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0"
+  },
+  "private": true
+}
