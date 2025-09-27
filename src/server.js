@@ -1,7 +1,9 @@
 import * as pathUtil from 'node:path';
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import { getTotal, submit } from './counter.js';
+import { ALLOWED_ORIGINS } from './config.js';
 
 export const app = express();
 
@@ -27,7 +29,15 @@ app.get('/api/total', (req, res) => {
   }
 });
 
-app.put('/api/chime', bodyParser.json({
+const chimeCorsOptions = {
+  origin: ALLOWED_ORIGINS,
+  methods: ['PUT'],
+  allowedHeaders: ['content-type'],
+  maxAge: 60 * 60 * 24
+};
+
+app.options('/api/chime', cors(chimeCorsOptions));
+app.put('/api/chime', cors(chimeCorsOptions), bodyParser.json({
   inflate: false,
   limit: 1024,
   type: 'application/json'
