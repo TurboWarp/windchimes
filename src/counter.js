@@ -11,8 +11,11 @@ const PERIOD_DURATION_MS = 1000 * 60 * 60;
 // percent from 0 (count nobody) to 1 (count everybody)
 const COUNTING_PROBABILITY = 1.0;
 
-const databaseDirectory = process.env.XDG_STATE_HOME || pathUtil.join(import.meta.dirname, '..');
-const db = sqlite3(pathUtil.join(databaseDirectory, 'windchimes.db'));
+const databaseDirectory = process.env.STATE_DIRECTORY || pathUtil.join(import.meta.dirname, '..');
+const databasePath = pathUtil.join(databaseDirectory, 'windchimes.db');
+console.log(`Database path: ${databasePath}`);
+
+const db = sqlite3(databasePath);
 db.pragma('journal_mode = WAL');
 db.pragma('secure_delete = true');
 
