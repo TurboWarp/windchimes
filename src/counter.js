@@ -48,7 +48,13 @@ ON CONFLICT (resource, event, day) DO UPDATE SET tally = daily.tally + ?;
 
 const _getTotal = db.prepare(`SELECT tally FROM totals WHERE resource = ? AND event = ?;`);
 
-let periodStart = Date.now();
+/**
+ * It's funny to do it this way.
+ * @returns {number}
+ */
+const daysSince2000 = () => Math.floor((Date.now() - 946684800000) / (24 * 60 * 60 * 1000));
+
+let periodDay = daysSince2000();
 
 const initialHashState = nodeCrypto.createHash('sha256');
 
@@ -71,15 +77,8 @@ const eventsThisPeriod = new Set();
  */
 const eventTallies = new Map();
 
-/**
- * It's funny to do it this way.
- * @returns {number}
- */
-const daysSince2000 = () => (Date.now() - 946684800000) / (24 * 60 * 60 * 1000);
-
 export const flushToDatabase = db.transaction(() => {
-  const day = Math.floor(daysSince2000());
-  console.log(`Tallying for day ${day}. ${eventsThisPeriod.size} events in this period.`);
+  console.log(`Tallying for day ${periodDay}. ${eventsThisPeriod.size} events in this period.`);
 
   for (const resource of eventTallies.keys()) {
     const resourceMap = eventTallies.get(resource);
@@ -87,7 +86,7 @@ export const flushToDatabase = db.transaction(() => {
       const tally = Math.floor(resourceMap.get(event) / COUNTING_PROBABILITY);
       if (tally > 0) {
         _updateTotals.run(resource, event, tally, tally);
-        _updateDaily.run(resource, event, day, tally, tally);
+        _updateDaily.run(resource, event, periodDay, tally, tally);
       }
     }
   }
@@ -98,7 +97,7 @@ const beginNewCollectionPeriod = () => {
   eventsPerUser.clear();
   eventsThisPeriod.clear();
   eventTallies.clear();
-  periodStart = Date.now();
+  periodDay = daysSince2000();
 };
 
 beginNewCollectionPeriod();
