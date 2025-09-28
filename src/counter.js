@@ -71,8 +71,14 @@ const eventsThisPeriod = new Set();
  */
 const eventTallies = new Map();
 
+/**
+ * It's funny to do it this way.
+ * @returns {number}
+ */
+const daysSince2000 = () => (Date.now() - 946684800000) / (24 * 60 * 60 * 1000);
+
 export const flushToDatabase = db.transaction(() => {
-  const day = Math.floor(periodStart / (1000 * 60 * 60 * 24));
+  const day = Math.floor(daysSince2000());
   console.log(`Tallying for day ${day}. ${eventsThisPeriod.size} events in this period.`);
 
   for (const resource of eventTallies.keys()) {
