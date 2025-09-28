@@ -21,6 +21,7 @@ app.get('/api/scratch/:id', (req, res) => {
   const resource = `scratch/${req.params.id}`;
   const index = getTotal(resource, 'view/index');
   const embed = getTotal(resource, 'view/embed');
+  res.header('cache-control', 'public, max-age=600');
   res.json({
     total: index + embed
   });
@@ -55,7 +56,9 @@ app.put('/api/chime', cors(chimeCorsOptions), bodyParser.json({
   }
 });
 
-app.use(express.static(pathUtil.join(import.meta.dirname, '../static/')));
+app.use(express.static(pathUtil.join(import.meta.dirname, '../static/'), {
+  maxAge: 1000 * 60 * 10
+}));
 
 app.use((req, res) => {
   res.status(404).end();
