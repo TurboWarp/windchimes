@@ -9,6 +9,7 @@ export const app = express();
 
 app.set('x-powered-by', false);
 app.set('query parser', (query) => new URLSearchParams(query));
+app.set('trust proxy', true);
 
 app.use((req, res, next) => {
   res.header('x-frame-options', 'DENY');
@@ -38,17 +39,19 @@ app.put('/api/chime', cors(chimeCorsOptions), bodyParser.json({
   limit: 1024,
   type: 'application/json'
 }), (req, res) => {
-  const ip = req.socket.remoteAddress || req.headers['x-real-ip'];
-  const resource = req.body.resource;
-  const event = req.body.event;
-  res.send('🎐');
+  const ip = req.ip;
+  const resource = req.body?.resource;
+  const event = req.body?.event;
 
   if (
     typeof ip === 'string' &&
     typeof resource === 'string' &&
     typeof event === 'string'
   ) {
+    res.send('🎐');
     submit(ip, resource, event);
+  } else {
+    res.status(400).end();
   }
 });
 
