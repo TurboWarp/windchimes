@@ -88,7 +88,6 @@ export const flushToDatabase = db.transaction(() => {
 });
 
 const beginNewCollectionPeriod = () => {
-  flushToDatabase();
   initialHashState.update(nodeCrypto.randomBytes(SALT_SIZE_BYTES));
   eventsPerUser.clear();
   eventsThisPeriod.clear();
@@ -197,6 +196,7 @@ export const getTotal = (resource, event) => {
 
 export const startTimers = () => {
   setInterval(() => {
+    flushToDatabase();
     beginNewCollectionPeriod();
   }, PERIOD_DURATION_MS);
 };
