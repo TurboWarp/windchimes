@@ -16,17 +16,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/total', (req, res) => {
-  const resource = req.query.get('resource');
-  const event = req.query.get('event');
-
-  if (typeof resource === 'string' && typeof event === 'string') {
-    res.json({
-      total: getTotal(resource, event)
-    });
-  } else {
-    res.status(400).end();
-  }
+app.get('/api/scratch/:id', (req, res) => {
+  const resource = `scratch/${req.params.id}`;
+  const index = getTotal(resource, 'view/index');
+  const embed = getTotal(resource, 'view/embed');
+  res.json({
+    total: index + embed
+  });
 });
 
 const chimeCorsOptions = {
