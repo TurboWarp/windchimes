@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import { PORT, UNIX_SOCKET_PERMISSIONS } from './config.js';
 import { app } from './server.js';
-import { startTimers } from './counter.js';
+import { flushToDatabase, startTimers } from './counter.js';
 
 app.listen(PORT, () => {
   // Update permissions of unix sockets
@@ -11,5 +11,14 @@ app.listen(PORT, () => {
 
   console.log(`Started on port ${PORT}`);
 });
+
+const handleSignal = (signal) => {
+  console.log(`Received ${signal}`);
+  flushToDatabase();
+  process.exit(0);
+};
+
+process.on('SIGTERM', handleSignal);
+process.on('SIGINT', handleSignal);
 
 startTimers();

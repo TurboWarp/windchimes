@@ -71,7 +71,7 @@ const eventsThisPeriod = new Set();
  */
 const eventTallies = new Map();
 
-const flushToDatabase = db.transaction(() => {
+export const flushToDatabase = db.transaction(() => {
   const day = Math.floor(periodStart / (1000 * 60 * 60 * 24));
   console.log(`Tallying for day ${day}. ${eventsThisPeriod.size} events in this period.`);
 
