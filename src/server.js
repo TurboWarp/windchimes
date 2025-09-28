@@ -42,11 +42,6 @@ app.put('/api/chime', cors(chimeCorsOptions), bodyParser.json({
   limit: 1024,
   type: 'application/json'
 }), (req, res) => {
-  if (req.headers['sec-gpc'] === '1' || req.headers['dnt'] === '1') {
-    res.send('Opted out per your browser settings.');
-    return;
-  }
-
   const ip = req.socket.remoteAddress || req.headers['x-real-ip'];
   const resource = req.body.resource;
   const event = req.body.event;
