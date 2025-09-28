@@ -60,6 +60,12 @@ const initialHashState = nodeCrypto.createHash('sha256');
 const eventsPerUser = new Map();
 
 /**
+ * Set of anonymized event IDs seen during this period.
+ * @type {Set<number>}
+ */
+const eventsThisPeriod = new Set();
+
+/**
  * Maps resources to their events, and then events to tallies.
  * @type {Map<string, Map<string, number>>}
  */
@@ -67,6 +73,7 @@ const eventTallies = new Map();
 
 const flushToDatabase = db.transaction(() => {
   const day = Math.floor(periodStart / (1000 * 60 * 60 * 24));
+  console.log(`Tallying for day ${day}. ${eventsThisPeriod.size} events in this period.`);
 
   for (const resource of eventTallies.keys()) {
     const resourceMap = eventTallies.get(resource);
@@ -84,6 +91,7 @@ const beginNewCollectionPeriod = () => {
   flushToDatabase();
   initialHashState.update(nodeCrypto.randomBytes(SALT_SIZE_BYTES));
   eventsPerUser.clear();
+  eventsThisPeriod.clear();
   eventTallies.clear();
   periodStart = Date.now();
 };
@@ -103,6 +111,23 @@ export const isValidResource = (resource) => /^scratch\/\d{3,11}$/.test(resource
 export const isValidEvent = (event) => event === 'view/index' || event === 'view/embed';
 
 /**
+ * @param {string} resource Validated resource
+ * @param {string} event Validated event
+ */
+const increment = (resource, event) => {
+  let resourceMap;
+  if (eventTallies.has(resource)) {
+    resourceMap = eventTallies.get(resource);
+  } else {
+    resourceMap = new Map();
+    eventTallies.set(resource, resourceMap);
+  }
+
+  const eventTally = resourceMap.get(event) || 0;
+  resourceMap.set(event, eventTally + 1);
+};
+
+/**
  * @param {string} userId
  * @param {string} resource A possibly-invalid resource. Must be string
  * @param {string} event A possibly-invalid event. Must be string
@@ -116,31 +141,42 @@ export const submit = (userId, resource, event) => {
     .copy()
     .update(userId)
     .digest()
-    .readUint32LE(0);
-  
+    .readUint32LE();
+
   if (anonymizedUserId > COUNTING_PROBABILITY * (2 ** 32)) {
+    // User is not in the sample being considered right now.
     return;
-  }
-  
-  const alreadySubmitted = eventsPerUser.get(anonymizedUserId) || 0;
-  if (alreadySubmitted > MAX_EVENTS_PER_USER_PER_PERIOD) {
-    return;
-  }
-  if (alreadySubmitted === 0 && eventsPerUser.size > MAX_USERS_PER_PERIOD) {
-    return;
-  }
-  eventsPerUser.set(anonymizedUserId, alreadySubmitted + 1);
-
-  let resourceMap;
-  if (eventTallies.has(resource)) {
-    resourceMap = eventTallies.get(resource);
-  } else {
-    resourceMap = new Map();
-    eventTallies.set(resource, resourceMap);
   }
 
-  const eventTally = resourceMap.get(event) || 0;
-  resourceMap.set(event, eventTally + 1);
+  const anonymizedEventId = initialHashState
+    .copy()
+    .update(`${anonymizedUserId}`)
+    .update('\0')
+    .update(event)
+    .update('\0')
+    .update(resource)
+    .digest()
+    .readUint32LE();
+
+  if (eventsThisPeriod.has(anonymizedEventId)) {
+    // Event was already counted in this period.
+    return;
+  }
+
+  const alreadySubmittedByUser = eventsPerUser.get(anonymizedUserId) || 0;
+  if (alreadySubmittedByUser > MAX_EVENTS_PER_USER_PER_PERIOD) {
+    // This user has already submitted too many events.
+    return;
+  }
+
+  if (alreadySubmittedByUser === 0 && eventsPerUser.size > MAX_USERS_PER_PERIOD) {
+    // We've seen too many users this period. Something strange is going on.
+    return;
+  }
+
+  eventsPerUser.set(anonymizedUserId, alreadySubmittedByUser + 1);
+  eventsThisPeriod.add(anonymizedEventId);
+  increment(resource, event);
 };
 
 /**
