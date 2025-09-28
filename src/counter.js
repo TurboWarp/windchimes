@@ -182,9 +182,12 @@ export const submit = (userId, resource, event) => {
 /**
  * @param {string} resource A possibly-invalid resource. Must be string
  * @param {string} event A possibly-invalid event. Must be string
- * @returns {number} The total, or 0 if never seen before.
+ * @returns {number} The total, or 0 if no data.
  */
 export const getTotal = (resource, event) => {
+  if (!isValidEvent(event) || !isValidResource(resource)) {
+    return 0;
+  }
   const result = _getTotal.get(resource, event);
   if (result) {
     return result.tally;
