@@ -5,8 +5,8 @@ import sqlite3 from 'better-sqlite3';
 const SALT_SIZE_BYTES = 256;
 
 const MAX_EVENTS_PER_USER_PER_PERIOD = 10;
-const MAX_USERS_PER_PERIOD = 100000;
-const PERIOD_DURATION_MS = 1000 * 60 * 10;
+const MAX_USERS_PER_PERIOD = 10000;
+const PERIOD_DURATION_MS = 1000 * 60 * 60;
 
 // percent from 0 (count nobody) to 1 (count everybody)
 const COUNTING_PROBABILITY = 1.0;
