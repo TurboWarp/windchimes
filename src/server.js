@@ -3,7 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { getTotal, submit } from './counter.js';
-import { ALLOWED_ORIGINS } from './config.js';
+import { READONLY_ORIGINS, SUBMISSION_ORIGINS } from './config.js';
 
 export const app = express();
 
@@ -17,7 +17,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/scratch/:id', (req, res) => {
+const readonlyCorsOptions = {
+  origin: READONLY_ORIGINS,
+  methods: ['GET'],
+  allowedHeaders: [],
+  maxAge: 60 * 60 * 24
+};
+
+app.get('/api/scratch/:id', cors(readonlyCorsOptions), (req, res) => {
   const resource = `scratch/${req.params.id}`;
   const index = getTotal(resource, 'view/index');
   const embed = getTotal(resource, 'view/embed');
@@ -27,15 +34,15 @@ app.get('/api/scratch/:id', (req, res) => {
   });
 });
 
-const chimeCorsOptions = {
-  origin: ALLOWED_ORIGINS,
+const submissionCorsOptions = {
+  origin: SUBMISSION_ORIGINS,
   methods: ['PUT'],
   allowedHeaders: ['content-type'],
   maxAge: 60 * 60 * 24
 };
 
-app.options('/api/chime', cors(chimeCorsOptions));
-app.put('/api/chime', cors(chimeCorsOptions), bodyParser.json({
+app.options('/api/chime', cors(submissionCorsOptions));
+app.put('/api/chime', cors(submissionCorsOptions), bodyParser.json({
   inflate: false,
   limit: 1024,
   type: 'application/json'
