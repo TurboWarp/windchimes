@@ -1,4 +1,4 @@
-import * as pathUtil from 'node:path';
+import pathUtil from 'node:path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';

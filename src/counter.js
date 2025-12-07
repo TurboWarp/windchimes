@@ -1,5 +1,5 @@
-import * as pathUtil from 'node:path';
-import * as nodeCrypto from 'node:crypto';
+import pathUtil from 'node:path';
+import nodeCrypto from 'node:crypto';
 import sqlite3 from 'better-sqlite3';
 
 const SALT_SIZE_BYTES = 256;
