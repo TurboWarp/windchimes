@@ -16,7 +16,8 @@ const databasePath = pathUtil.join(databaseDirectory, 'windchimes.db');
 console.log(`Database path: ${databasePath}`);
 
 const db = sqlite3(databasePath);
-db.pragma('journal_mode = WAL');
+// Our workload is almost entirely reads so the WAL does not really benefit us much
+db.pragma('journal_mode = TRUNCATE');
 db.pragma('secure_delete = true');
 
 db.exec(`
