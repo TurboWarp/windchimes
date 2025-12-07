@@ -3,7 +3,11 @@ import { PORT, UNIX_SOCKET_PERMISSIONS } from './config.js';
 import { app } from './server.js';
 import { flushToDatabase, startTimers } from './counter.js';
 
-app.listen(PORT, () => {
+app.listen(PORT, (err) => {
+  if (err) {
+    throw err;
+  }
+
   // Update permissions of unix sockets
   if (typeof PORT === 'string' && PORT.startsWith('/') && UNIX_SOCKET_PERMISSIONS >= 0) {
     fsPromises.chmod(PORT, UNIX_SOCKET_PERMISSIONS);
