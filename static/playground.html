@@ -1,22 +1,32 @@
-<button onclick="submit()">Submit</button>
-<button onclick="get()">Get</button>
-<script>
-function submit() {
-    fetch('/api/chime', {
-        method: 'PUT',
-        body: JSON.stringify({
-            resource: 'scratch/60917032',
-            event: 'view/index'
-        }),
-        headers: {
-            'content-type': 'application/json'
-        }
-    });
-}
-function get() {
-    fetch('/api/total?resource=60917032&event=view/index')
-        .then((res) => res.text())
-        .then((text) => alert(text));
-}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="robots" content="noindex">
+    </head>
+    <body>
+        <button onclick="submit()">Submit</button>
+        <button onclick="get()">Get</button>
 
-</script>
+        <script>
+            function submit() {
+                fetch('/api/chime', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        resource: 'scratch/60917032',
+                        event: 'view/index'
+                    }),
+                    headers: {
+                        'content-type': 'application/json'
+                    }
+                });
+            }
+
+            function get() {
+                fetch('/api/scratch/60917032')
+                    .then((res) => res.text())
+                    .then((text) => alert(text));
+            }
+        </script>
+    </body>
+</html>

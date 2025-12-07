@@ -46,7 +46,9 @@ INSERT INTO daily (resource, event, day, tally) VALUES (?, ?, ?, ?)
 ON CONFLICT (resource, event, day) DO UPDATE SET tally = daily.tally + ?;
 `);
 
-const _getTotal = db.prepare(`SELECT tally FROM totals WHERE resource = ? AND event = ?;`);
+const _getTotal = db.prepare('SELECT tally FROM totals WHERE resource = ? AND event = ?;');
+
+const _getFirstDate = db.prepare('SELECT min(day) FROM daily WHERE resource = ? AND event = ?;');
 
 /**
  * It's funny to do it this way.
@@ -216,7 +218,23 @@ export const getTotal = (resource, event) => {
   }
   const result = _getTotal.get(resource, event);
   if (result) {
-    return result.tally;
+    return result.tally ?? 0;
+  }
+  return 0;
+};
+
+/**
+ * @param {string} resource A possibly-invalid resource. Must be string
+ * @param {string} event A possibly-invalid event. Must be string
+ * @returns {number} First date in days since 2000, or 0 if not found.
+ */
+export const getFirstDate = (resource, event) => {
+  if (!isValidEvent(event) || !isValidResource(resource)) {
+    return 0;
+  }
+  const result = _getFirstDate.get(resource, event);
+  if (result) {
+    return result['min(day)'] ?? 0;
   }
   return 0;
 };

@@ -2,7 +2,7 @@ import pathUtil from 'node:path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { getTotal, submit } from './counter.js';
+import { getFirstDate, getTotal, submit } from './counter.js';
 import { READONLY_ORIGINS, SUBMISSION_ORIGINS } from './config.js';
 
 export const app = express();
@@ -24,14 +24,47 @@ const readonlyCorsOptions = {
   maxAge: 60 * 60 * 24
 };
 
+/**
+ * Get minimum non-zero date.
+ * @param {number[]} dates
+ * @returns {number}
+ */
+const getMinDate = (dates) => {
+  let min = 0;
+  for (let i = 0; i < dates.length; i++) {
+    const date = dates[i];
+    if (date > 0 && (date < min || min === 0)) {
+      min = date;
+    }
+  }
+  return min;
+};
+
 app.get('/api/scratch/:id', cors(readonlyCorsOptions), (req, res) => {
   const resource = `scratch/${req.params.id}`;
-  const index = getTotal(resource, 'view/index');
-  const embed = getTotal(resource, 'view/embed');
-  res.header('cache-control', 'public, max-age=600');
-  res.json({
-    total: index + embed
-  });
+
+  res.header('cache-control', 'public, max-age=3600');
+
+  const indexViews = getTotal(resource, 'view/index');
+  const embedViews = getTotal(resource, 'view/embed');
+  const totalViews = indexViews + embedViews;
+
+  if (totalViews === 0) {
+    res.status(404);
+    res.json({
+      total: 0,
+      firstDate: 0
+    });
+  } else {
+    const indexFirstDate = getFirstDate(resource, 'view/index');
+    const embedFirstDate = getFirstDate(resource, 'view/embed');
+    const firstDate = getMinDate([indexFirstDate, embedFirstDate]);
+
+    res.json({
+      total: totalViews,
+      firstDate
+    });
+  }
 });
 
 const submissionCorsOptions = {
