@@ -17,7 +17,7 @@ console.log(`Database path: ${databasePath}`);
 
 const db = sqlite3(databasePath);
 // Our workload is almost entirely reads so the WAL does not really benefit us much
-db.pragma('journal_mode = TRUNCATE');
+db.pragma('journal_mode = DELETE');
 db.pragma('secure_delete = true');
 
 db.exec(`
