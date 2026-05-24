@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS totals (
   event TEXT NOT NULL,
   tally INTEGER NOT NULL,
   PRIMARY KEY (resource, event)
-) STRICT;
+) STRICT, WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS daily (
   resource TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS daily (
   day INTEGER NOT NULL,
   tally INTEGER NOT NULL,
   PRIMARY KEY (resource, event, day)
-) STRICT;
+) STRICT, WITHOUT ROWID;
 `);
 
 const _updateTotals = db.prepare(`
