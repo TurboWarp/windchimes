@@ -132,7 +132,11 @@ export const isValidResource = (resource) => /^scratch\/\d{3,11}$/.test(resource
  * @param {string} event
  * @returns {boolean} true if valid event
  */
-export const isValidEvent = (event) => event === 'view/index' || event === 'view/embed';
+export const isValidEvent = (event) => (
+  event === 'view/index' ||
+  event === 'view/embed' ||
+  event === 'error/loading'
+);
 
 /**
  * @param {string} resource Validated resource
