@@ -135,6 +135,8 @@ export const isValidResource = (resource) => /^scratch\/\d{3,11}$/.test(resource
 export const isValidEvent = (event) => (
   event === 'view/index' ||
   event === 'view/embed' ||
+  event === 'error/unshared' ||
+  event === 'error/fetch' ||
   event === 'error/loading'
 );
 
