@@ -9,7 +9,7 @@ export const app = express();
 
 app.set('x-powered-by', false);
 app.set('query parser', (query) => new URLSearchParams(query));
-app.set('trust proxy', true);
+app.set('trust proxy', 'loopback');
 
 app.use((req, res, next) => {
   res.header('x-frame-options', 'DENY');
