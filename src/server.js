@@ -9,7 +9,10 @@ export const app = express();
 
 app.set('x-powered-by', false);
 app.set('query parser', (query) => new URLSearchParams(query));
-app.set('trust proxy', 'loopback');
+
+// Using trust proxy is not a security issue. Our nginx configuration reliably sets XFF to the address
+// that makes sense for the context. We also use unix sockets so loopback mode is not usable.
+app.set('trust proxy', 1);
 
 app.use((req, res, next) => {
   res.header('x-frame-options', 'DENY');
