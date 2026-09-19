@@ -1,6 +1,7 @@
 import pathUtil from 'node:path';
 import nodeCrypto from 'node:crypto';
 import sqlite3 from 'better-sqlite3';
+import ipaddr from 'ipaddr.js';
 import * as metrics from './metrics.js';
 
 const SALT_SIZE_BYTES = 256;
@@ -143,11 +144,17 @@ const increment = (resource, event) => {
 };
 
 /**
- * @param {string} userId
+ * @param {string} ip IPv4/IPv6
+ * @returns {Uint8Array}
+ */
+export const getUserIdFromIp = (ip) => Uint8Array.from(ipaddr.process(ip).toByteArray()).subarray(0, 8);
+
+/**
+ * @param {string} ip IPv4/IPv6
  * @param {string} resource A possibly-invalid resource. Must be string
  * @param {string} event A possibly-invalid event. Must be string
  */
-export const submit = (userId, resource, event) => {
+export const submit = (ip, resource, event) => {
   if (!isValidResource(resource) || !isValidEvent(event)) {
     metrics.events.inc({
       result: 'invalid_resource_or_event'
@@ -157,7 +164,7 @@ export const submit = (userId, resource, event) => {
 
   const anonymizedUserId = initialHashState
     .copy()
-    .update(userId)
+    .update(getUserIdFromIp(ip))
     .digest()
     .readUint32LE();
 
