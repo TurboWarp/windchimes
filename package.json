@@ -18,7 +18,8 @@
   "homepage": "https://github.com/TurboWarp/windchimes#readme",
   "description": "",
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
+    "@prometheus-io/client": "^0.16.1",
+    "better-sqlite3": "^13.0.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.2.0"
