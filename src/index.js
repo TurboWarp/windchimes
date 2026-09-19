@@ -2,6 +2,7 @@ import fsPromises from 'node:fs/promises';
 import { PORT, UNIX_SOCKET_PERMISSIONS } from './config.js';
 import { app } from './server.js';
 import { flushToDatabase, startTimers } from './counter.js';
+import * as metrics from './metrics.js';
 
 app.listen(PORT, (err) => {
   if (err) {
@@ -26,3 +27,5 @@ process.on('SIGTERM', handleSignal);
 process.on('SIGINT', handleSignal);
 
 startTimers();
+
+metrics.listen();

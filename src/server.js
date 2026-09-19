@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { getFirstDate, getTotal, submit } from './counter.js';
 import { READONLY_ORIGINS, SUBMISSION_ORIGINS } from './config.js';
+import * as metrics from './metrics.js';
 
 export const app = express();
 
@@ -13,6 +14,8 @@ app.set('query parser', (query) => new URLSearchParams(query));
 // Using trust proxy is not a security issue. Our nginx configuration reliably sets XFF to the address
 // that makes sense for the context. We also use unix sockets so loopback mode is not usable.
 app.set('trust proxy', 1);
+
+app.use(metrics.middleware);
 
 app.use((req, res, next) => {
   res.header('x-frame-options', 'DENY');
@@ -95,12 +98,18 @@ app.put('/api/chime', cors(submissionCorsOptions), bodyParser.json({
     res.send('🎐');
     submit(ip, resource, event);
   } else {
+    metrics.events.inc({
+      result: 'bad_request'
+    });
     res.status(400).end();
   }
 });
 
 app.use(express.static(pathUtil.join(import.meta.dirname, '../static/'), {
-  maxAge: 1000 * 60 * 10
+  maxAge: 1000 * 60 * 10,
+  setHeaders: (res) => {
+    res.req.metricsRoute = 'static';
+  }
 }));
 
 app.use((req, res) => {

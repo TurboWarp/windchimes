@@ -1,6 +1,7 @@
 import pathUtil from 'node:path';
 import nodeCrypto from 'node:crypto';
 import sqlite3 from 'better-sqlite3';
+import * as metrics from './metrics.js';
 
 const SALT_SIZE_BYTES = 256;
 
@@ -80,22 +81,9 @@ const eventsThisPeriod = new Set();
  */
 const eventTallies = new Map();
 
-const untalliedReasons = {
-  invalidResourceOrEvent: 0,
-  notInSample: 0,
-  duplicateEvent: 0,
-  tooManyEventsPerUser: 0,
-  tooManyUsers: 0
-};
-
 export const flushToDatabase = db.transaction(() => {
   console.log(`Tallying for day ${periodDay}`);
   console.log(`Final unique events: ${eventsThisPeriod.size}`);
-  console.log(`Events ignored due to invalid resource: ${untalliedReasons.invalidResourceOrEvent}`);
-  console.log(`Events ignored due to random sample: ${untalliedReasons.notInSample}`);
-  console.log(`Events ignored due to duplicate: ${untalliedReasons.duplicateEvent}`);
-  console.log(`Events ignored due to too many per-user: ${untalliedReasons.tooManyEventsPerUser}`);
-  console.log(`Events ignored due to too many users: ${untalliedReasons.tooManyUsers}`);
 
   for (const resource of eventTallies.keys()) {
     const resourceMap = eventTallies.get(resource);
@@ -115,9 +103,6 @@ const beginNewCollectionPeriod = () => {
   eventsThisPeriod.clear();
   eventTallies.clear();
   periodDay = daysSince2000();
-  for (const reason of Object.keys(untalliedReasons)) {
-    untalliedReasons[reason] = 0;
-  }
 };
 
 beginNewCollectionPeriod();
@@ -164,7 +149,9 @@ const increment = (resource, event) => {
  */
 export const submit = (userId, resource, event) => {
   if (!isValidResource(resource) || !isValidEvent(event)) {
-    untalliedReasons.invalidResourceOrEvent++;
+    metrics.events.inc({
+      result: 'invalid_resource_or_event'
+    });
     return;
   }
 
@@ -176,7 +163,9 @@ export const submit = (userId, resource, event) => {
 
   if (anonymizedUserId > COUNTING_PROBABILITY * (2 ** 32)) {
     // User is not in the sample being considered right now.
-    untalliedReasons.notInSample++;
+    metrics.events.inc({
+      result: 'not_in_sample'
+    });
     return;
   }
 
@@ -192,25 +181,34 @@ export const submit = (userId, resource, event) => {
 
   if (eventsThisPeriod.has(anonymizedEventId)) {
     // Event was already counted in this period.
-    untalliedReasons.duplicateEvent++;
+    metrics.events.inc({
+      result: 'duplicate_event'
+    });
     return;
   }
 
   const alreadySubmittedByUser = eventsPerUser.get(anonymizedUserId) || 0;
   if (alreadySubmittedByUser > MAX_EVENTS_PER_USER_PER_PERIOD) {
     // This user has already submitted too many events.
-    untalliedReasons.tooManyEventsPerUser++;
+    metrics.events.inc({
+      result: 'too_many_events_per_user'
+    });
     return;
   }
 
   if (alreadySubmittedByUser === 0 && eventsPerUser.size > MAX_USERS_PER_PERIOD) {
     // We've seen too many users this period. Something strange is going on.
-    untalliedReasons.tooManyUsers++;
+    metrics.events.inc({
+      result: 'too_many_users'
+    });
     return;
   }
 
   eventsPerUser.set(anonymizedUserId, alreadySubmittedByUser + 1);
   eventsThisPeriod.add(anonymizedEventId);
+  metrics.events.inc({
+    result: 'tallied'
+  });
   increment(resource, event);
 };
 
