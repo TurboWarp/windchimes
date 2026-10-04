@@ -123,7 +123,10 @@ export const isValidEvent = (event) => (
   event === 'view/embed' ||
   event === 'error/unshared' ||
   event === 'error/fetch' ||
-  event === 'error/loading'
+  event === 'error/loading' ||
+  event === 'error/compiler' ||
+  event === 'error/crash' ||
+  event === 'error/webgl'
 );
 
 /**
