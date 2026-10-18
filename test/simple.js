@@ -3,6 +3,7 @@ import childProcess from 'node:child_process';
 import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import pathUtil from 'node:path';
+import { after, test } from 'node:test';
 
 const ENTRY_POINT = pathUtil.join(import.meta.dirname, '../src/index.js');
 const PORT = 20000 + Math.floor(Math.random() * 10000);
@@ -63,20 +64,22 @@ const submitView = async () => {
   assert.equal(res.status, 200);
 };
 
-try {
+after(async () => {
+  await fsPromises.rm(stateDirectory, {
+    recursive: true,
+    force: true
+  });
+});
+
+test('can submit views and they get counted', async () => {
   const serverA = await startServer();
   const before = await getViews();
   await submitView();
   await stopServer(serverA);
 
   const serverB = await startServer();
-  const after = await getViews();
+  const afterRestart = await getViews();
   await stopServer(serverB);
 
-  assert.equal(after, before + 1, `expected ${before + 1} views, got ${after}`);
-} finally {
-  await fsPromises.rm(stateDirectory, {
-    recursive: true,
-    force: true
-  });
-}
+  assert.equal(afterRestart, before + 1);
+});
